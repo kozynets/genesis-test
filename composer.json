@@ -6,7 +6,9 @@
       "email": "illyakozynets@gmail.com"
     }
   ],
-  "require": {},
+  "require": {
+    "phpunit/phpunit": "*"
+  },
   "autoload": {
     "psr-4": {
       "genesis\\": "./src"
