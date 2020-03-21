@@ -1,0 +1,15 @@
+{
+  "name": "kozynets/genesis-test",
+  "authors": [
+    {
+      "name": "kozynets",
+      "email": "illyakozynets@gmail.com"
+    }
+  ],
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "genesis\\": "./src"
+    }
+  }
+}
