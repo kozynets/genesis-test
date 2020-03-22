@@ -2,20 +2,33 @@
 
 namespace genesis\cache\variants;
 
+use genesis\exceptions\CacheDirectoryNotCreated;
+use genesis\exceptions\CacheFileNotCreated;
+use genesis\exceptions\CacheNotDefinedException;
+use genesis\exceptions\CacheNotFoundException;
+
 class FileVariantCache implements VariantCacheInterface
 {
     /**
-     * @var resource
+     * @var string
      */
-    private $fileName;
+    private $fileDirectoryPath;
+
+    /**
+     * @var string
+     */
+    private $fileSuffix = '.txt';
 
     /**
      * FileVariantCache constructor.
-     * @param string $fileName
+     * @param string $fileDirectoryPath
      */
-    public function __construct(string $fileName)
+    public function __construct(string $fileDirectoryPath)
     {
-        $this->fileName = $fileName;
+        $this->fileDirectoryPath = $fileDirectoryPath;
+        if (!is_dir($this->fileDirectoryPath)) {
+            throw new CacheDirectoryNotCreated('Cache directory not created');
+        }
     }
 
     /**
@@ -24,8 +37,12 @@ class FileVariantCache implements VariantCacheInterface
      */
     public function get(string $key)
     {
-        $cache = $this->getFileData();
-        return $cache[$key]['value'];
+        $result = unserialize(file_get_contents($this->fileDirectoryPath . $key . $this->fileSuffix));
+        if ($result == false) {
+            throw new CacheNotFoundException('Cache not found');
+        }
+
+        return $result;
     }
 
     /**
@@ -35,13 +52,8 @@ class FileVariantCache implements VariantCacheInterface
      */
     public function set(string $key, $value, int $ttl = 3600): void
     {
-        $cache = $this->getFileData();
-        $cache[$key] = [
-            'value' => $value,
-            'expiresAt' => time() + $ttl
-        ];
-        $this->saveFileData($cache);
-        $this->getFileData();
+        $this->saveFileData($key, $value);
+        $this->setExpiresAt($key, $ttl);
     }
 
     /**
@@ -50,39 +62,38 @@ class FileVariantCache implements VariantCacheInterface
      */
     public function exists(string $key): bool
     {
-        $cache = $this->getFileData();
-
-        return (isset($cache[$key]) && ($cache[$key]['expiresAt'] >= time()));
+        return filemtime($this->fileDirectoryPath . $key . $this->fileSuffix) >= time();
     }
 
     /**
-     * @return array
+     * @param string $key
+     * @param int $ttl
      */
-    private function getFileData(): array
+    private function setExpiresAt(string $key, int $ttl): void
     {
-        $cache = unserialize(file_get_contents($this->fileName));
-
-        return ($cache) ? $cache : [];
+        if (!touch($this->fileDirectoryPath . $key . $this->fileSuffix, time() + $ttl)) {
+            throw new CacheFileNotCreated('can\'t create cache file to key' . $key);
+        }
     }
 
     /**
-     * @param array $cache
+     * @param string $key
+     * @param $value
      */
-    private function saveFileData(array $cache)
+    private function saveFileData(string $key, $value)
     {
-        if (!file_put_contents($this->fileName, serialize($cache))) {
-
+        if (!file_put_contents($this->fileDirectoryPath . $key . $this->fileSuffix, serialize($value))) {
+            throw new CacheNotDefinedException('Can\'t define cache');
         }
     }
 
     public function __destruct()
     {
-        $cache = $this->getFileData();
-        foreach ($cache as $key => $cacheItem) {
-            if ($cacheItem['expiresAt'] < time()) {
-                unset($cache[$key]);
+        foreach (scandir($this->fileDirectoryPath) as $file) {
+            if (!in_array($file, ['.', '..']) && (filemtime($this->fileDirectoryPath . $file) < time())) {
+                unlink($this->fileDirectoryPath . $file);
             }
         }
-        $this->saveFileData($cache);
     }
+
 }
