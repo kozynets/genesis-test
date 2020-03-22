@@ -41,7 +41,7 @@ class Cache implements CacheInterface
      * @param $value
      * @param int $ttl
      */
-    public function set(string $key, $value, $ttl = 3600)
+    public function set(string $key, $value, int $ttl = 3600)
     {
         foreach ($this->cacheVariants as $cache) {
             $cache->set($key, $value, $ttl);

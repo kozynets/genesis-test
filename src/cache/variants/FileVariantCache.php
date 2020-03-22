@@ -33,7 +33,7 @@ class FileVariantCache implements VariantCacheInterface
      * @param $value
      * @param int $ttl
      */
-    public function set(string $key, $value, $ttl = 3600): void
+    public function set(string $key, $value, int $ttl = 3600): void
     {
         $cache = $this->getFileData();
         $cache[$key] = [
