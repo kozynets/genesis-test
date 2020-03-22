@@ -29,6 +29,7 @@ class FileVariantCache implements VariantCacheInterface
         if (!is_dir($this->fileDirectoryPath)) {
             throw new CacheDirectoryNotCreated('Cache directory not created');
         }
+        chmod($this->fileDirectoryPath, 0775);
     }
 
     /**
