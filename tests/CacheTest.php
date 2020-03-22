@@ -61,14 +61,27 @@ class CacheTest extends TestCase
         $this->assertEquals('test', $result);
     }
 
-    public function testGetCacheNotFount()
+    public function testGetCacheNotFound()
     {
         $this->staticCache->expects($this->once())->method('exists')
             ->with($this->equalTo('var1'))->will($this->returnValue(false));
         $this->fileCache->expects($this->once())->method('exists')
             ->with($this->equalTo('var1'))->will($this->returnValue(false));
         $this->expectException(CacheNotFoundException::class);
-        $result = $this->cache->get('var1');
-        $this->assertEquals('test', $result);
+        $this->cache->get('var1');
+    }
+
+    public function testSetCache()
+    {
+        $data = [
+            'key' => 'var1',
+            'value' => 'var2',
+            'ttl' => 123
+        ];
+        $this->staticCache->expects($this->once())->method('set')
+            ->with($this->equalTo($data['key']), $this->equalTo($data['value']), $this->equalTo($data['ttl']));
+        $this->fileCache->expects($this->once())->method('set')
+            ->with($this->equalTo($data['key']), $this->equalTo($data['value']), $this->equalTo($data['ttl']));
+        $this->cache->set($data['key'], $data['value'], $data['ttl']);
     }
 }
