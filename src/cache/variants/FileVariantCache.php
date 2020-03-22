@@ -70,7 +70,9 @@ class FileVariantCache implements VariantCacheInterface
      */
     private function saveFileData(array $cache)
     {
-        file_put_contents($this->fileName, serialize($cache));
+        if (!file_put_contents($this->fileName, serialize($cache))) {
+
+        }
     }
 
     public function __destruct()

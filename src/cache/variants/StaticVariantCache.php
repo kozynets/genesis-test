@@ -11,9 +11,9 @@ class StaticVariantCache implements VariantCacheInterface
 
     /**
      * @param string $key
-     * @return string
+     * @return mixed
      */
-    public function get(string $key): string
+    public function get(string $key)
     {
         return self::$cache[$key]['value'];
     }
@@ -37,10 +37,6 @@ class StaticVariantCache implements VariantCacheInterface
      */
     public function exists(string $key): bool
     {
-        if (!isset(self::$cache[$key]) || (self::$cache[$key]['expiresAt'] < time())) {
-            return false;
-        }
-
-        return true;
+        return (isset(self::$cache[$key]) && (self::$cache[$key]['expiresAt'] >= time()));
     }
 }
